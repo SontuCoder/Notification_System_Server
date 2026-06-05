@@ -112,3 +112,9 @@ class Notification(BaseModel):
     delivered_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+
+
+
+
