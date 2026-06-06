@@ -1,0 +1,24 @@
+# Create feature branch
+git switch -c feature/logger
+
+# Work
+git add .
+git commit -m "Add logger"
+
+# Push
+git push -u origin feature/logger
+
+# Switch to main
+git switch main
+
+# Get latest main
+git pull origin main
+
+# Merge feature
+git merge feature/logger
+
+# Push merged code
+git push origin main
+
+
+deactivate
