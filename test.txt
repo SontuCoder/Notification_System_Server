@@ -20,5 +20,5 @@ git merge feature/logger
 # Push merged code
 git push origin main
 
-
+#for deactive venv
 deactivate
