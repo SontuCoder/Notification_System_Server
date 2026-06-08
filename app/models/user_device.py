@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID, TEXT
 from sqlalchemy import String, Boolean, DateTime, Index
 from uuid import UUID, uuid4
 from datetime import datetime
@@ -28,7 +28,7 @@ class UserDevice(Base):
     )
 
     device_token: Mapped[str] = mapped_column(
-        String,
+        TEXT,
         nullable=False,
         unique=True
     )
