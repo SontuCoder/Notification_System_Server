@@ -29,7 +29,8 @@ class UserDevice(Base):
 
     device_token: Mapped[str] = mapped_column(
         String,
-        nullable=False
+        nullable=False,
+        unique=True
     )
 
     platform: Mapped[DevicePlatform] = mapped_column(
