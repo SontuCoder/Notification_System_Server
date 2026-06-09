@@ -8,7 +8,7 @@ from datetime import datetime
 
 
 from app.models.scheduled_notification import ScheduledNotification
-from app.schemas.notification import Notification_Channel, Scheduled_Notification_Status
+from app.schemas.notification import Scheduled_Notification_Status
 from app.utils.logger import logger
 
 
@@ -52,10 +52,10 @@ class ScheduledNotificationRepository:
     def get_pending_notifications(self, db: Session) -> list[ScheduledNotification]:
         return db.query(ScheduledNotification).filter(ScheduledNotification.status == Scheduled_Notification_Status.Pending).all()
     
-    def count_pending_notifications(self, db: Session) -> list[ScheduledNotification]:
+    def count_pending_notifications(self, db: Session) -> int:
         return db.query(ScheduledNotification).filter(ScheduledNotification.status == Scheduled_Notification_Status.Pending).count()
 
-    def count_completed_notifications(self, db: Session) -> list[ScheduledNotification]:
+    def count_completed_notifications(self, db: Session) -> int:
         return db.query(ScheduledNotification).filter(ScheduledNotification.status == Scheduled_Notification_Status.Sent).count()
     
 
@@ -95,116 +95,107 @@ class ScheduledNotificationRepository:
             logger.exception(f"Failed to update notification schedule due {str(ex)}")
             raise
 
-    def update_target_data(self, db:Session, record_id: UUID, new_body: str)-> ScheduledNotification | None:
+    def update_target_data(self, db:Session, record_id: UUID, target_data: dict[str, Any])-> ScheduledNotification | None:
         try:
             notification = self.get_by_id(db, record_id)
             if not notification:
                 return None
-            if notification.body == new_body:
+            if notification.target_data == target_data:
                 return notification
-            notification.body = new_body
+            notification.target_data = target_data
             self._save(db, notification)
-            logger.info(f"Template body updated successfully for template {str(notification.id)}")
+            logger.info(f"Notification target data updated successfully for template {str(notification.id)}")
             return notification
         
         except SQLAlchemyError as ex:
             db.rollback()
-            logger.exception(f"Failed to update template body due {str(ex)}")
+            logger.exception(f"Failed to update Notification target data due {str(ex)}")
             raise
 
-
-
-    def update_channel(self, db:Session, temp_id: UUID, new_channel: Notification_Channel)-> NotificationTemplate | None:
+    def update_template_id(self, db:Session, record_id: UUID, template_id: UUID)-> ScheduledNotification | None:
         try:
-            template = self.get_by_id(db, temp_id)
-            if not template:
+            notification = self.get_by_id(db, record_id)
+            if not notification:
                 return None
-            if template.channel == new_channel:
-                return template
-            template.channel = new_channel
-            self._save(db, template)
-            logger.info(f"Template channel updated successfully for template {str(template.id)}")
-            return template
+            if notification.notification_template_id == template_id:
+                return notification
+            notification.notification_template_id = template_id
+            self._save(db, notification)
+            logger.info(f"Notification template id updated successfully for template {str(notification.id)}")
+            return notification
+        
         except SQLAlchemyError as ex:
             db.rollback()
-            logger.exception(f"Failed to update template channel due {str(ex)}")
+            logger.exception(f"Failed to update Notification template id due {str(ex)}")
             raise
 
-    def update_variables(self, db:Session, temp_id: UUID, new_variable:dict[str, Any])-> NotificationTemplate | None:
+    def mark_as_sent(self, db:Session, notification_id: UUID)-> ScheduledNotification | None:
         try:
-            template = self.get_by_id(db, temp_id)
-            if not template:
+            notification = self.get_by_id(db, notification_id)
+            if not notification:
                 return None
-            if template.variables == new_variable:
-                return template
-            template.variables = new_variable
-            self._save(db, template)
-            logger.info(f"Template variables updated successfully for template {str(template.id)}")
-            return template
+            if notification.status == Scheduled_Notification_Status.Sent:
+                return notification
+            notification.status = Scheduled_Notification_Status.Sent
+            notification.sent_at = datetime.utcnow()
+            self._save(db, notification)
+            logger.info(f"Notification marked as 'Sent' successfully for notification {str(notification.id)}")
+            return notification
         except SQLAlchemyError as ex:
             db.rollback()
-            logger.exception(f"Failed to update template variables due {str(ex)}")
+            logger.exception(f"Failed to mark as 'Sent' notification due {str(ex)}")
             raise
 
-    def activate_template(self, db:Session, temp_id: UUID)-> NotificationTemplate | None:
+    def mark_as_failed(self, db:Session, notification_id: UUID)-> ScheduledNotification | None:
         try:
-            template = self.get_by_id(db, temp_id)
-            if not template:
+            notification = self.get_by_id(db, notification_id)
+            if not notification:
                 return None
-            if template.is_active:
-                return template
-            template.is_active = True
-            self._save(db, template)
-            logger.info(f"Template activated successfully for template {str(template.id)}")
-            return template
+            if notification.status == Scheduled_Notification_Status.Failed:
+                return notification
+            notification.status = Scheduled_Notification_Status.Failed
+            self._save(db, notification)
+            logger.info(f"Notification marked as 'Fault' successfully for notification {str(notification.id)}")
+            return notification
+        
         except SQLAlchemyError as ex:
             db.rollback()
-            logger.exception(f"Failed to activate template due {str(ex)}")
+            logger.exception(f"Failed to mark as 'Fault' notification due {str(ex)}")
             raise
 
-    def deactivate_template(self, db:Session, temp_id: UUID)-> NotificationTemplate | None:
+    def activate_schedule(self, db:Session, notification_id: UUID)-> ScheduledNotification | None:
         try:
-            template = self.get_by_id(db, temp_id)
-            if not template:
+            notification = self.get_by_id(db, notification_id)
+            if not notification:
                 return None
-            if not template.is_active:
-                return template
-            template.is_active = False
-            self._save(db, template)
-            logger.info(f"Template deactivated successfully for template {str(template.id)}")
-            return template
+            if notification.is_active:
+                return notification
+            notification.is_active = True
+            self._save(db, notification)
+            logger.info(f"Notification schedule activated successfully for template {str(notification.id)}")
+            return notification
         except SQLAlchemyError as ex:
             db.rollback()
-            logger.exception(f"Failed to deactivate template due {str(ex)}")
+            logger.exception(f"Failed to activate Notification schedule due {str(ex)}")
             raise
 
-    def update_template( self, db: Session, temp_id: UUID, title: str | None, body: str, variables: dict[str, Any] | None ) ->NotificationTemplate | None:
+    def deactivate_schedule(self, db:Session, notification_id: UUID)-> ScheduledNotification | None:
         try:
-            template = self.get_by_id(db, temp_id)
-            if not template:
+            notification = self.get_by_id(db, notification_id)
+            if not notification:
                 return None
-            
-            if template.title == title and template.body == body and template.variables == variables:
-                return template
-            template.title = title
-            template.body = body
-            template.variables = variables
-            self._save(db, template)
-            logger.info(f"Template updated successfully for template {str(template.id)}")
-            return template
+            if not notification.is_active:
+                return notification
+            notification.is_active = False
+            self._save(db, notification)
+            logger.info(f"Notification schedule deactivated successfully for template {str(notification.id)}")
+            return notification
+        
         except SQLAlchemyError as ex:
             db.rollback()
-            logger.exception(f"Failed to update template due {str(ex)}")
+            logger.exception(f"Failed to deactivate notification schedule due {str(ex)}")
             raise
 
 
-notification_template_repo = NotificationTemplateRepository()
+scheduled_notification_repo = ScheduledNotificationRepository()
 
-
-# ScheduledNotificationRepository
-# │
-# ├── mark_as_sent()
-# ├── mark_as_failed()
-# │
-# ├── activate_schedule()
-# └── deactivate_schedule()
