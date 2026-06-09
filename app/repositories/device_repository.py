@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import exists
+from sqlalchemy import exists, and_
 from uuid import UUID
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -74,6 +74,14 @@ class UserDeviceRepository:
                 UserDevice.is_active.is_(True)
             ).all()
         ) 
+    def get_by_user_id_and_platform(self, db: Session, user_id: UUID, platform: Device_Platform) -> UserDevice | None:
+        return db.query(UserDevice).filter( UserDevice.user_id == user_id, UserDevice.platform == platform).first()
+    
+    def count_active_devices(self, db: Session)-> int:
+        return db.query(UserDevice).filter(UserDevice.is_active.is_(True)).count()
+    
+    def exists_by_user_id_and_platform(self, db: Session, user_id: UUID, platform: Device_Platform) -> bool:
+        return bool(db.query(exists().where(and_(UserDevice.user_id == user_id, UserDevice.platform == platform))).scalar())
 
 
     # ================= Update =================
