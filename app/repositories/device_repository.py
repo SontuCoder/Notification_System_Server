@@ -175,42 +175,38 @@ class UserDeviceRepository:
     
 
     # ================= Delete =================
-    def delete_device_by_id(self, db: Session, record_id: UUID) -> bool:
+    def deactivate_device_by_id(self, db: Session, record_id: UUID) -> bool:
         try:
             device = self.get_by_id(db, record_id)
             
             if not device:
                 return False
-            db.delete(device)
-            db.commit()
-            logger.info(f"User device deleted successfully for {record_id}")
+            device.is_active = False
+            self._save(db, device)
+            logger.info(f"User device inactive successfully for {device.id}")
             return True
         except SQLAlchemyError as ex:
             db.rollback()
-            logger.exception(f"Failed to delete device due {str(ex)}")
+            logger.exception(f"Failed to inactive device due {str(ex)}")
             raise
 
-    def delete_device_by_device_token(self, db: Session, device_token: str) -> bool:
+    def deactivate_device_by_device_token(self, db: Session, device_token: str) -> bool:
         try:
             device = self.get_by_device_token(db, device_token)
             
             if not device:
                 return False
-            db.delete(device)
-            db.commit()
-            logger.info(f"User device deleted successfully for {device.id}")
+            device.is_active = False
+            self._save(db, device)
+            logger.info(f"User device inactive successfully for {device.id}")
             return True
         except SQLAlchemyError as ex:
             db.rollback()
-            logger.exception(f"Failed to delete device due {str(ex)}")
+            logger.exception(f"Failed to inactive device due {str(ex)}")
             raise
 
 
 
-
-# get_by_user_id_and_platform()
-# count_active_devices()
-# exists_by_user_id_and_platform()
 
 
 user_device_repo = UserDeviceRepository()
