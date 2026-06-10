@@ -44,10 +44,10 @@ class ScheduledNotificationRepository:
     def exists_by_id(self, db: Session, record_id: UUID) -> bool:
         return bool(db.query(exists().where(ScheduledNotification.id == record_id)).scalar()) 
     
-    def get_due_notifications(self, db: Session) -> list[ScheduledNotification]:
+    def get_due_notifications(self, db: Session, limit: int = 100) -> list[ScheduledNotification]:
         return (db.query(ScheduledNotification).filter(ScheduledNotification.status == Scheduled_Notification_Status.Pending,
             ScheduledNotification.is_active.is_(True),
-            ScheduledNotification.scheduled_at <= datetime.utcnow()).all())
+            ScheduledNotification.scheduled_at <= datetime.utcnow()).limit(limit).all())
 
     def get_pending_notifications(self, db: Session) -> list[ScheduledNotification]:
         return db.query(ScheduledNotification).filter(ScheduledNotification.status == Scheduled_Notification_Status.Pending).all()
@@ -58,6 +58,11 @@ class ScheduledNotificationRepository:
     def count_completed_notifications(self, db: Session) -> int:
         return db.query(ScheduledNotification).filter(ScheduledNotification.status == Scheduled_Notification_Status.Sent).count()
     
+    def get_failed_notifications(self, db: Session) -> list[ScheduledNotification]:
+        return (db.query(ScheduledNotification).filter(ScheduledNotification.status ==Scheduled_Notification_Status.Failed).all())
+    
+    def get_active_schedules(self,db: Session) -> list[ScheduledNotification]:
+        return (db.query(ScheduledNotification).filter(ScheduledNotification.is_active.is_(True)).all())
 
     # ============= Update ==============
 
@@ -104,7 +109,7 @@ class ScheduledNotificationRepository:
                 return notification
             notification.target_data = target_data
             self._save(db, notification)
-            logger.info(f"Notification target data updated successfully for template {str(notification.id)}")
+            logger.info(f"Notification target data updated successfully for notification {str(notification.id)}")
             return notification
         
         except SQLAlchemyError as ex:
@@ -121,7 +126,7 @@ class ScheduledNotificationRepository:
                 return notification
             notification.notification_template_id = template_id
             self._save(db, notification)
-            logger.info(f"Notification template id updated successfully for template {str(notification.id)}")
+            logger.info(f"Notification template id updated successfully for notification {str(notification.id)}")
             return notification
         
         except SQLAlchemyError as ex:
@@ -155,12 +160,12 @@ class ScheduledNotificationRepository:
                 return notification
             notification.status = Scheduled_Notification_Status.Failed
             self._save(db, notification)
-            logger.info(f"Notification marked as 'Fault' successfully for notification {str(notification.id)}")
+            logger.info(f"Notification marked as 'Failed' successfully for notification {str(notification.id)}")
             return notification
         
         except SQLAlchemyError as ex:
             db.rollback()
-            logger.exception(f"Failed to mark as 'Fault' notification due {str(ex)}")
+            logger.exception(f"Failed to mark as 'Failed' notification due {str(ex)}")
             raise
 
     def activate_schedule(self, db:Session, notification_id: UUID)-> ScheduledNotification | None:
@@ -172,7 +177,7 @@ class ScheduledNotificationRepository:
                 return notification
             notification.is_active = True
             self._save(db, notification)
-            logger.info(f"Notification schedule activated successfully for template {str(notification.id)}")
+            logger.info(f"Notification schedule activated successfully for notification {str(notification.id)}")
             return notification
         except SQLAlchemyError as ex:
             db.rollback()
@@ -188,7 +193,7 @@ class ScheduledNotificationRepository:
                 return notification
             notification.is_active = False
             self._save(db, notification)
-            logger.info(f"Notification schedule deactivated successfully for template {str(notification.id)}")
+            logger.info(f"Notification schedule deactivated successfully for notification {str(notification.id)}")
             return notification
         
         except SQLAlchemyError as ex:
@@ -198,4 +203,3 @@ class ScheduledNotificationRepository:
 
 
 scheduled_notification_repo = ScheduledNotificationRepository()
-
