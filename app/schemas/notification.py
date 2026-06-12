@@ -52,29 +52,23 @@ class Device_Platform(str, Enum):
 # ========== Tables ======================
 # ========================================
 class Notification_Template(BaseModel):
-    id: UUID
     name: str
     channel: Notification_Channel
     title: Optional[str] = None
     body: str
     variables: Optional[Dict[str, Any]] = None
     is_active: bool = True
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 class User_Device(BaseModel): # for only Ph, Tab, not for web
-    id: UUID
     user_id: UUID
     device_token: str
     platform: Device_Platform
     notification_enabled: bool = True
     is_active: bool = True
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 
 
 class User_Notification_Preferences(BaseModel):
-    id: UUID
     user_id: UUID
     push_enabled: bool = True
     email_enabled: bool = True
@@ -83,7 +77,6 @@ class User_Notification_Preferences(BaseModel):
 
 
 class Scheduled_Notification(BaseModel):
-    id: UUID
     channel: Notification_Channel
     scheduled_at: datetime
     target_type: str
@@ -91,13 +84,8 @@ class Scheduled_Notification(BaseModel):
     notification_template_id: UUID
     status: Scheduled_Notification_Status = Scheduled_Notification_Status.Pending
     is_active: bool = True
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-    sent_at: Optional[datetime] = None
 
 class Notification(BaseModel):
-    id: UUID
-    user_id: UUID
     channel: Notification_Channel
     notification_template_id: Optional[UUID] = None
     scheduled_notification_id: Optional[UUID] = None
@@ -107,11 +95,8 @@ class Notification(BaseModel):
     retry_count: int = 0
     category: Notification_Category
     priority: Notification_Priority = Notification_Priority.Medium
-    failure_reason: Optional[str] = None
-    sent_at: Optional[datetime] = None
-    delivered_at: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
 
 
 
