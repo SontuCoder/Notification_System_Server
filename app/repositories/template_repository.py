@@ -172,14 +172,16 @@ class NotificationTemplateRepository:
             logger.exception(f"Failed to deactivate template due {str(ex)}")
             raise
 
-    def update_template( self, db: Session, temp_id: UUID, title: str | None, body: str, variables: dict[str, Any] | None ) ->NotificationTemplate | None:
+    def update_template( self, db: Session, temp_id: UUID, name: str | None, channel: Notification_Channel | None, title: str | None, body: str, variables: dict[str, Any] | None ) ->NotificationTemplate | None:
         try:
             template = self.get_by_id(db, temp_id)
             if not template:
                 return None
             
-            if template.title == title and template.body == body and template.variables == variables:
+            if template.name == name and template.channel == channel and template.title == title and template.body == body and template.variables == variables:
                 return template
+            template.name = name
+            template.channel = channel
             template.title = title
             template.body = body
             template.variables = variables

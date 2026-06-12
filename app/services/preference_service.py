@@ -1,8 +1,3 @@
-
-# update_preferences()
-
-
-
 from uuid import UUID
 from sqlalchemy.orm import Session
 
