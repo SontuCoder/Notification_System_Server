@@ -167,6 +167,32 @@ class NotificationRepository:
             logger.exception(f"Failed to mark as 'Delivered' notification due {str(ex)}")
             raise
 
+    def increment_retry_count_bulk(
+        self,
+        db: Session,
+        notification_ids: list[UUID]
+    ) -> int:
+    
+        try:
+            updated_count = (
+                db.query(Notification)
+                .filter(Notification.id.in_(notification_ids))
+                .update(
+                    {
+                        Notification.retry_count:
+                        Notification.retry_count + 1
+                    },
+                    synchronize_session=False
+                )
+            )
+        
+            db.commit()
+            logger.info(f"Notification retry count updated successfully for {str(updated_count)} notifications")
+            return updated_count
+        except SQLAlchemyError as ex:
+            db.rollback()
+            logger.exception(f"Failed to update notifications retry count due {str(ex)}")
+            raise
 
     # ============= Delete ==============
     def delete_by_user_id(self, db: Session, user_id: UUID) -> bool:

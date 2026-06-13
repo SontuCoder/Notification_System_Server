@@ -86,6 +86,7 @@ class Scheduled_Notification(BaseModel):
     is_active: bool = True
 
 class Notification(BaseModel):
+    user_id: UUID
     channel: Notification_Channel
     notification_template_id: Optional[UUID] = None
     scheduled_notification_id: Optional[UUID] = None
