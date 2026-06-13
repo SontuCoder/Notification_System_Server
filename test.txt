@@ -22,5 +22,4 @@ git push origin main
 
 #for deactive venv
 deactivate
-
 uvicorn app.main:app --reload
