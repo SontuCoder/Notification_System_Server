@@ -21,5 +21,8 @@ git merge feature/logger
 git push origin main
 
 #for deactive venv
+venv/Scripts/activate
 deactivate
 uvicorn app.main:app --reload
+
+python -m pip install twilio
