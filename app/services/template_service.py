@@ -57,3 +57,5 @@ class TemplateService:
     def get_templates_by_channel(self, db: Session, channel: Notification_Channel)-> list[NotificationTemplate]:
         return notification_template_repo.get_by_channel(db, channel)
     
+
+template_service = TemplateService()

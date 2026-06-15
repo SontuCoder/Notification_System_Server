@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any
 
 from app.core.database import Base
-from app.schemas.notification import Notification_Channel, Scheduled_Notification_Status
+from app.schemas.notification import Notification_Channel, Scheduled_Notification_Status, NotificationTargetType, Notification_Category
 
 
 class ScheduledNotification(Base):
@@ -34,8 +34,8 @@ class ScheduledNotification(Base):
         nullable=False
     )
 
-    target_type: Mapped[str] = mapped_column(
-        String(20),
+    target_type: Mapped[NotificationTargetType] = mapped_column(
+        SQLEnum(NotificationTargetType),
         nullable=False
     )
 
@@ -54,6 +54,10 @@ class ScheduledNotification(Base):
         SQLEnum(Scheduled_Notification_Status),
         nullable=False,
         default=Scheduled_Notification_Status.Pending
+    )
+    category: Mapped[Notification_Category] = mapped_column(
+    SQLEnum(Notification_Category),
+    nullable=False
     )
 
     is_active: Mapped[bool] = mapped_column(

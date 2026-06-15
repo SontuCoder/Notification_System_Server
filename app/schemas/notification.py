@@ -16,6 +16,11 @@ class Notification_Status(str, Enum):
     Delivered = "delivered"
     Failed = "failed"
 
+class NotificationTargetType(str, Enum):
+    User = "user"
+    Users = "users"
+    AllUsers = "all_users"
+
 class Notification_Priority(str, Enum):
     Low = "low"
     Medium = "medium"
@@ -67,7 +72,6 @@ class User_Device(BaseModel): # for only Ph, Tab, not for web
     is_active: bool = True
 
 
-
 class User_Notification_Preferences(BaseModel):
     user_id: UUID
     push_enabled: bool = True
@@ -79,10 +83,11 @@ class User_Notification_Preferences(BaseModel):
 class Scheduled_Notification(BaseModel):
     channel: Notification_Channel
     scheduled_at: datetime
-    target_type: str
+    target_type: NotificationTargetType = NotificationTargetType.AllUsers
     target_data: Optional[Dict[str, Any]] = None
     notification_template_id: UUID
     status: Scheduled_Notification_Status = Scheduled_Notification_Status.Pending
+    category: Notification_Category = Notification_Category.Promotion
     is_active: bool = True
 
 class Notification(BaseModel):
