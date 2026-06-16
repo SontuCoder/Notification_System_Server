@@ -35,5 +35,10 @@ class ScheduleService:
     def process_due_notifications(self, db: Session, limit: int = 100)-> list[schedule_model]:
         return scheduled_notification_repo.get_due_notifications(db, limit)
     
+    def mark_failed(self, db: Session, schedule_id: UUID)->bool:
+        return scheduled_notification_repo.mark_as_failed(db, schedule_id)
+    
+    def mark_sent(self, db: Session, schedule_id: UUID)->bool:
+        return scheduled_notification_repo.mark_as_sent(db, schedule_id)
 
 schedule_service = ScheduleService()

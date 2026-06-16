@@ -74,6 +74,7 @@ class UserDeviceRepository:
                 UserDevice.is_active.is_(True)
             ).all()
         ) 
+    
     def get_by_user_id_and_platform(self, db: Session, user_id: UUID, platform: Device_Platform) -> UserDevice | None:
         return db.query(UserDevice).filter( UserDevice.user_id == user_id, UserDevice.platform == platform).first()
     
