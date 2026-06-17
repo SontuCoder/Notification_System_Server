@@ -36,62 +36,63 @@ def create_notification_from_schedule(
 while True:
     logger.info("Schedule worker run start")
     db = SessionLocal()
+
     try:
-
         due_schedules = (schedule_service.process_due_notifications(db))
-    
         for schedule in due_schedules:
-            notification_template =  template_service.get_template(db, schedule.notification_template_id)
-            if not notification_template:
-                continue
-
-            all_success = True
-
-            if schedule.target_type == NotificationTargetType.User:
-                if schedule.category in (Notification_Category.Promotion,Notification_Category.System):
-                    notification = create_notification_from_schedule(schedule, UUID(schedule.target_data["user_id"]),notification_template)
-            
-                    notification = notification_service.create_notification(db,notification)
-            
-                    # Send
-                    sent = notification_dispatcher.send_notification(db,notification)
-                    all_success = all_success and sent
-            elif schedule.target_type == NotificationTargetType.Users:
-                if schedule.category in (Notification_Category.Promotion,Notification_Category.System):
-                    for user_id in schedule.target_data["user_ids"]:
-
-                        notification = create_notification_from_schedule(schedule, UUID(user_id),notification_template)
+            try:
+                notification_template =  template_service.get_template(db, schedule.notification_template_id)
+                if not notification_template:
+                    logger.warning(f"Template {schedule.notification_template_id} not found")
+                    schedule_service.mark_failed(db,schedule.id)
+    
+                all_success = True
+    
+                if schedule.target_type == NotificationTargetType.User:
+                    if schedule.category in (Notification_Category.Promotion,Notification_Category.System):
+                        notification = create_notification_from_schedule(schedule, UUID(schedule.target_data["user_id"]),notification_template)
                 
                         notification = notification_service.create_notification(db,notification)
                 
                         # Send
                         sent = notification_dispatcher.send_notification(db,notification)
                         all_success = all_success and sent
-
-            elif schedule.target_type == NotificationTargetType.AllUsers:
-                if schedule.category in (Notification_Category.Promotion,Notification_Category.System):
-                    users_devices = user_device_repo.get_all_push_enabled_devices(db)
-                    if not users_devices:
-                        all_success = False
-                    for user_device in users_devices:
-                        notification = create_notification_from_schedule(schedule, user_device.user_id, notification_template)
-                
-                        notification = notification_service.create_notification(db,notification)
-                
-                        # Send
-                        sent = notification_dispatcher.send_notification(db,notification)
-                        all_success = all_success and sent
-
-            # Mark schedule as sent
-            if all_success:
-                schedule_service.mark_sent(db,schedule.id)
-
-            else: 
+                elif schedule.target_type == NotificationTargetType.Users:
+                    if schedule.category in (Notification_Category.Promotion,Notification_Category.System):
+                        for user_id in schedule.target_data["user_ids"]:
+    
+                            notification = create_notification_from_schedule(schedule, UUID(user_id),notification_template)
+                    
+                            notification = notification_service.create_notification(db,notification)
+                    
+                            # Send
+                            sent = notification_dispatcher.send_notification(db,notification)
+                            all_success = all_success and sent
+    
+                elif schedule.target_type == NotificationTargetType.AllUsers:
+                    if schedule.category in (Notification_Category.Promotion,Notification_Category.System):
+                        users_devices = user_device_repo.get_all_push_enabled_devices(db)
+                        if not users_devices:
+                            all_success = False
+                        for user_device in users_devices:
+                            notification = create_notification_from_schedule(schedule, user_device.user_id, notification_template)
+                    
+                            notification = notification_service.create_notification(db,notification)
+                    
+                            # Send
+                            sent = notification_dispatcher.send_notification(db,notification)
+                            all_success = all_success and sent
+    
+                # Mark schedule as sent
+                if all_success:
+                    schedule_service.mark_sent(db,schedule.id)
+    
+                else: 
+                    schedule_service.mark_failed(db, schedule.id)
+            except Exception as ex:
+                logger.exception(f"Failed to send schedule notification {schedule.id} due {str(ex)}")
                 schedule_service.mark_failed(db, schedule.id)
-    except Exception as ex:
-        logger.warning(f"Failed to send schedule notification {schedule.id} due {str(ex)}")
-        schedule_service.mark_failed(db, schedule.id)
     finally:
         db.close()
-
+        logger.info(f"Schedule worker processed {len(due_schedules)} schedules")
     sleep(10)
