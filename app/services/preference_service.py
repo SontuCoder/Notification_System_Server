@@ -95,3 +95,5 @@ class PreferenceService:
                 user_id
             )
         )
+
+preference_service = PreferenceService()
