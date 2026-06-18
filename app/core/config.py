@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: str
     TWILIO_PHONE_NUMBER: str
     TWILIO_CODE: str
+    AUTH_HOST: str
     class Config:
         env_file = ".env"
 
