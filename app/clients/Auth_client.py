@@ -65,6 +65,14 @@ class AuthClient:
             )
 
             return None
+        
+    def is_admin(self)-> bool:
+        try:
+            (...)
+            return True
+        except grpc.RpcError as ex:
+            logger.exception(f"Failed to check admin or not")
+            return False
 
 
 auth_client = AuthClient()

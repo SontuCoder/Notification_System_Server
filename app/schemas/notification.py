@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, Dict, Any
 from enum import Enum
 from uuid import UUID
@@ -102,10 +102,65 @@ class Notification(BaseModel):
     category: Notification_Category
     priority: Notification_Priority = Notification_Priority.Medium
 
+class Notification_Create(BaseModel):
+    user_id: UUID
+    channel: Notification_Channel
+    category: Notification_Category
+    title: str | None = None
+    body: str
+    priority: Notification_Priority = (
+        Notification_Priority.Medium
+    )
+    notification_template_id: UUID | None = None
+    scheduled_notification_id: UUID | None = None
 
 
+class Notification_Response(BaseModel):
+    id: UUID
+    user_id: UUID
+    channel: Notification_Channel
+    category: Notification_Category
+    status: Notification_Status
+    priority: Notification_Priority
+    title: str | None
+    body: str
+    retry_count: int
+    failure_reason: str | None
+    notification_template_id: UUID | None
+    scheduled_notification_id: UUID | None
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
+class Template_Create(BaseModel):
+    name: str
+    channel: Notification_Channel
+    title: Optional[str] | None
+    body: str
+    variables: Optional[Dict[str, Any]] | None
 
 
+class Template_Response(BaseModel):
+    id: UUID
+    name: str
+    channel: Notification_Channel
+    title: str | None
+    body: str
+    variables: dict[str, Any] | None
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+    model_config = ConfigDict(
+        from_attributes=True
+    )
 
-
+class Template_Update(BaseModel):
+    name: str | None = None
+    channel: Notification_Channel | None = None
+    title: str | None = None
+    body: str | None = None
+    variables: dict[str, Any] | None = None
+    is_active: bool | None = None
 
