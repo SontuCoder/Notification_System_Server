@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 
 from app.models.notification import Notification as Notification_Model
-from app.schemas.notification import Notification as Notification_Schema
+from app.schemas.notification import Notification as Notification_Schema, Notification_Channel, Notification_Status
 
 from app.repositories.notification_repository import (
     notification_repo
@@ -90,5 +90,33 @@ class NotificationService:
     ) -> list[Notification_Model]:
     
         return notification_repo.get_pending_notifications(db)
+    
+    def get_notifications(
+        self,
+        db: Session,
+        user_id: UUID | None = None,
+        status: Notification_Status | None = None,
+        channel: Notification_Channel | None = None,
+        skip: int = 0,
+        limit: int = 50
+    ):
+        query = db.query(Notification_Model)
+    
+        if user_id:
+            query = query.filter(Notification_Model.user_id == user_id)
+    
+        if status:
+            query = query.filter(Notification_Model.status == status)
+    
+        if channel:
+            query = query.filter(Notification_Model.channel == channel)
+    
+        return (
+            query
+            .order_by(Notification_Model.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
     
 notification_service = NotificationService()
